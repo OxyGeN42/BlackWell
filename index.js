@@ -285,7 +285,7 @@ async function createTicket(interaction, category) {
             permissionOverwrites: permissionOverwrites
         });
 
-        // Hoşgeldin mesajı
+        // Hoşgeldin mesajı - DÜZELTİLDİ (kayma yok)
         const welcomeEmbed = new EmbedBuilder()
             .setColor(info.color)
             .setTitle(`🎫 **${info.title} - BlackWell Family**`)
@@ -294,7 +294,7 @@ async function createTicket(interaction, category) {
 > BlackWell Family destek sistemine hoş geldiniz.
 
 ╔════════════════════════════════════╗
-║        **📋 TICKET BİLGİLERİ**      ║
+║        **TICKET BİLGİLERİ**         ║
 ╠════════════════════════════════════╣
 ║ **Kategori:** ${info.title} ${info.emoji}
 ║ **Ticket Sahibi:** ${interaction.user.tag}
