@@ -1,9 +1,34 @@
-const { Client, GatewayIntentBits, Partials, EmbedBuilder, ActionRowBuilder, StringSelectMenuBuilder, ButtonBuilder, ButtonStyle, ChannelType, PermissionsBitField } = require('discord.js');
+const { Client, GatewayIntentBits, Partials, EmbedBuilder, ActionRowBuilder, StringSelectMenuBuilder, ButtonBuilder, ButtonStyle, ChannelType, PermissionsBitField, MessageFlags } = require('discord.js');
+const fs = require('fs');
+
+// Railway variables'dan oku - KESİN ÇÖZÜM
 const config = {
     token: process.env.token,
-    supportRoles: process.env.supportRoles ? process.env.supportRoles.split(",") : [],
-    logChanelId: process.env.logChannelId
+    supportRoles: process.env.supportRoles ? process.env.supportRoles.split(',') : [],
+    logChannelId: process.env.logChannelId || process.env.LOGCHANNELID || process.env.logChannel
 };
+
+// DEBUG - Variable'ları görelim
+console.log('📊 Environment Variables:', Object.keys(process.env));
+console.log('🔍 Config:', {
+    tokenVarMi: !!config.token,
+    supportRoles: config.supportRoles,
+    logChannelId: config.logChannelId
+});
+
+if (!config.token) {
+    console.error('❌ HATA: Token bulunamadı!');
+    process.exit(1);
+}
+
+if (!config.logChannelId) {
+    console.error('⚠️ UYARI: logChannelId bulunamadı! Loglar gönderilemeyecek.');
+}
+
+// Ticket geçmişi için klasör
+if (!fs.existsSync('./transcripts')) {
+    fs.mkdirSync('./transcripts');
+}
 const fs = require('fs');
 
 const client = new Client({
