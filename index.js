@@ -366,25 +366,25 @@ if (!logChannel) {
 } else {
     console.log(`✅ Log kanalı bulundu: ${logChannel.name} (${logChannel.id})`);
     
-    try {
+    // LOG KANALI - BASİT VERSİYON
+try {
+    const logChannel = await client.channels.fetch(config.logChannelId);
+    if (logChannel) {
         const logEmbed = new EmbedBuilder()
             .setColor(info.color)
             .setTitle('📬 Yeni Ticket Açıldı - BlackWell Family')
-            .setDescription(`**${interaction.user.tag}** tarafından yeni ticket açıldı!`)
+            .setDescription(`${interaction.user.tag} tarafından yeni ticket açıldı!`)
             .addFields(
-                { name: '👤 Kullanıcı', value: `${interaction.user.tag} (${interaction.user.id})`, inline: true },
-                { name: '📂 Kategori', value: `${info.emoji} ${info.title}`, inline: true },
-                { name: '📢 Kanal', value: `${ticketChannel}`, inline: true },
-                { name: '⏰ Açılış', value: `<t:${Math.floor(Date.now() / 1000)}:R>`, inline: true }
+                { name: 'Kategori', value: info.title, inline: true },
+                { name: 'Kanal', value: ticketChannel.toString(), inline: true }
             )
-            .setThumbnail(interaction.user.displayAvatarURL())
             .setTimestamp();
 
         await logChannel.send({ embeds: [logEmbed] });
-        console.log(`✅ Log başarıyla gönderildi: ${logChannel.name}`);
-    } catch (error) {
-        console.error(`❌ Log gönderilirken hata:`, error);
+        console.log(`✅ Log gönderildi: ${logChannel.name}`);
     }
+} catch (error) {
+    console.error(`❌ Log hatası:`, error.message);
 }
     } catch (error) {
         console.error('Ticket açma hatası:', error);
