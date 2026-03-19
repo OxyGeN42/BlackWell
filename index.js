@@ -42,12 +42,12 @@ client.once('ready', () => {
     client.user.setActivity('🎫 BlackWell Family | Destek Sistemi', { type: 3 });
 });
 
-// Yetkili kontrolü fonksiyonu
+// Yetkili kontrolü
 function hasSupportRole(member) {
     return member.roles.cache.some(role => config.supportRoles.includes(role.id));
 }
 
-// Ticket paneli oluşturma komutu
+// Ticket paneli oluşturma
 client.on('messageCreate', async (message) => {
     if (message.author.bot) return;
     
@@ -200,7 +200,7 @@ async function createTicket(interaction, category) {
     try {
         await interaction.deferReply({ ephemeral: true });
         
-        // Kullanıcının zaten açık ticket'ı var mı?
+        // Açık ticket var mı?
         const existingTicket = interaction.guild.channels.cache.find(
             c => c.name.includes(interaction.user.username.toLowerCase()) && 
             c.parent?.name === 'BLACKWELL-TICKETLER'
@@ -229,6 +229,7 @@ async function createTicket(interaction, category) {
         const categoryName = getCategoryName(category);
         const channelName = `ticket-${categoryName}-${interaction.user.username}`.toLowerCase();
 
+        // İzinler
         const permissionOverwrites = [
             {
                 id: interaction.guild.id,
@@ -257,6 +258,7 @@ async function createTicket(interaction, category) {
             }
         ];
 
+        // Yetkili rolleri
         for (const roleId of config.supportRoles) {
             if (roleId && roleId.trim() !== '') {
                 permissionOverwrites.push({
@@ -274,6 +276,7 @@ async function createTicket(interaction, category) {
             }
         }
 
+        // Ticket kanalı
         const ticketChannel = await interaction.guild.channels.create({
             name: channelName,
             type: ChannelType.GuildText,
@@ -282,6 +285,7 @@ async function createTicket(interaction, category) {
             permissionOverwrites: permissionOverwrites
         });
 
+        // Hoşgeldin mesajı
         const welcomeEmbed = new EmbedBuilder()
             .setColor(info.color)
             .setTitle(`🎫 **${info.title} - BlackWell Family**`)
@@ -312,6 +316,7 @@ async function createTicket(interaction, category) {
             })
             .setTimestamp();
 
+        // Butonlar
         const buttons = new ActionRowBuilder()
             .addComponents(
                 new ButtonBuilder()
@@ -356,29 +361,31 @@ async function createTicket(interaction, category) {
             } catch (e) {}
         }, 5000);
 
-        // LOG KANALI - DÜZELTİLMİŞ VERSİYON
+        // LOG - TICKET AÇILINCA
         if (config.logChannelId) {
             try {
                 const logChannel = await client.channels.fetch(config.logChannelId);
                 if (logChannel) {
                     const logEmbed = new EmbedBuilder()
-                        .setColor(info.color)
+                        .setColor(0x00FF00)
                         .setTitle('📬 Yeni Ticket Açıldı - BlackWell Family')
-                        .setDescription(`${interaction.user.tag} tarafından yeni ticket açıldı!`)
+                        .setDescription(`**${interaction.user.tag}** tarafından yeni ticket açıldı!`)
                         .addFields(
-                            { name: 'Kategori', value: info.title, inline: true },
-                            { name: 'Kanal', value: ticketChannel.toString(), inline: true }
+                            { name: '👤 Kullanıcı', value: `${interaction.user.tag} (${interaction.user.id})`, inline: true },
+                            { name: '📂 Kategori', value: `${info.emoji} ${info.title}`, inline: true },
+                            { name: '📢 Kanal', value: ticketChannel.toString(), inline: true },
+                            { name: '⏰ Açılış', value: `<t:${Math.floor(Date.now() / 1000)}:R>`, inline: true }
                         )
+                        .setThumbnail(interaction.user.displayAvatarURL())
+                        .setImage('https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExazhneW5tdjlqcWczaXB4ZnRrMmR4eGFwcjB2OHlpc21wZnM2MTRxaCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/MD3VFsgFLey4f6lnyK/giphy.gif')
                         .setTimestamp();
 
                     await logChannel.send({ embeds: [logEmbed] });
-                    console.log(`✅ Log gönderildi: ${logChannel.name}`);
+                    console.log(`✅ Açılış log gönderildi`);
                 }
             } catch (error) {
-                console.error('❌ Log hatası:', error.message);
+                console.error('❌ Açılış log hatası:', error.message);
             }
-        } else {
-            console.log('⚠️ logChannelId tanımlı değil, log gönderilemedi');
         }
 
     } catch (error) {
@@ -392,7 +399,7 @@ async function createTicket(interaction, category) {
 // Menü etkileşimleri
 client.on('interactionCreate', async (interaction) => {
     try {
-        // SEÇİMİ TEMİZLE BUTONU
+        // SEÇİMİ TEMİZLE
         if (interaction.isButton() && interaction.customId === 'clear_selection') {
             const updatedRow = new ActionRowBuilder()
                 .addComponents(
@@ -466,11 +473,14 @@ client.on('interactionCreate', async (interaction) => {
             return;
         }
 
+        // TICKET OLUŞTUR
         if (interaction.isStringSelectMenu() && interaction.customId === 'ticket_category') {
             await createTicket(interaction, interaction.values[0]);
         }
 
+        // BUTON İŞLEMLERİ
         if (interaction.isButton()) {
+            // TICKET KAPAT
             if (interaction.customId === 'close_ticket') {
                 if (!hasSupportRole(interaction.member)) {
                     const reply = await interaction.reply({
@@ -513,6 +523,7 @@ client.on('interactionCreate', async (interaction) => {
                 }, 10000);
             }
 
+            // TICKET ÜSTLEN
             if (interaction.customId === 'claim_ticket') {
                 if (!hasSupportRole(interaction.member)) {
                     const reply = await interaction.reply({
@@ -545,6 +556,7 @@ client.on('interactionCreate', async (interaction) => {
                 }, 10000);
             }
 
+            // KAYIT AL
             if (interaction.customId === 'transcript_ticket') {
                 if (!hasSupportRole(interaction.member)) {
                     const reply = await interaction.reply({
@@ -567,12 +579,16 @@ client.on('interactionCreate', async (interaction) => {
 
                 const messages = await interaction.channel.messages.fetch({ limit: 100 });
                 let transcript = `TICKET TRANSCRIPT\n`;
+                transcript += `═══════════════════════════════\n`;
                 transcript += `Kanal: ${interaction.channel.name}\n`;
-                transcript += `Tarih: ${new Date().toLocaleString('tr-TR')}\n\n`;
+                transcript += `Tarih: ${new Date().toLocaleString('tr-TR')}\n`;
+                transcript += `Alan: ${interaction.user.tag}\n`;
+                transcript += `═══════════════════════════════\n\n`;
                 
                 const messagesArray = Array.from(messages.values());
                 messagesArray.reverse().forEach(msg => {
-                    transcript += `[${msg.createdAt.toLocaleString('tr-TR')}] ${msg.author.tag}: ${msg.content || '[Medya]'}\n`;
+                    const time = msg.createdAt.toLocaleString('tr-TR');
+                    transcript += `[${time}] ${msg.author.tag}: ${msg.content || '[Medya/Ek]'}\n`;
                 });
 
                 const fileName = `./transcripts/${interaction.channel.name}-${Date.now()}.txt`;
@@ -580,7 +596,8 @@ client.on('interactionCreate', async (interaction) => {
 
                 const followUp = await interaction.followUp({
                     content: `✅ Ticket kaydı alındı!`,
-                    ephemeral: true
+                    ephemeral: true,
+                    files: [fileName]
                 });
                 
                 setTimeout(async () => {
@@ -591,17 +608,26 @@ client.on('interactionCreate', async (interaction) => {
                 }, 10000);
             }
 
+            // KAPATMA ONAY
             if (interaction.customId === 'confirm_close') {
                 const channel = interaction.channel;
                 
+                // Ticket sahibini bul
+                const ticketOwner = channel.name.split('-').pop();
+                const ownerUser = interaction.guild.members.cache.find(m => m.user.username.toLowerCase() === ticketOwner);
+                
                 const messages = await channel.messages.fetch({ limit: 100 });
                 let transcript = `TICKET TRANSCRIPT\n`;
+                transcript += `═══════════════════════════════\n`;
                 transcript += `Kanal: ${channel.name}\n`;
-                transcript += `Kapanma: ${new Date().toLocaleString('tr-TR')}\n\n`;
+                transcript += `Kapanma: ${new Date().toLocaleString('tr-TR')}\n`;
+                transcript += `Kapatılan: ${interaction.user.tag}\n`;
+                transcript += `═══════════════════════════════\n\n`;
                 
                 const messagesArray = Array.from(messages.values());
                 messagesArray.reverse().forEach(msg => {
-                    transcript += `[${msg.createdAt.toLocaleString('tr-TR')}] ${msg.author.tag}: ${msg.content || '[Medya]'}\n`;
+                    const time = msg.createdAt.toLocaleString('tr-TR');
+                    transcript += `[${time}] ${msg.author.tag}: ${msg.content || '[Medya/Ek]'}\n`;
                 });
 
                 const fileName = `./transcripts/${channel.name}-${Date.now()}.txt`;
@@ -609,21 +635,44 @@ client.on('interactionCreate', async (interaction) => {
 
                 await interaction.update({ content: '🔒 Ticket kapatılıyor...', components: [] });
 
+                // LOG - TICKET KAPANINCA
                 if (config.logChannelId) {
                     try {
                         const logChannel = await client.channels.fetch(config.logChannelId);
                         if (logChannel) {
+                            const closeEmbed = new EmbedBuilder()
+                                .setColor(0xFF0000)
+                                .setTitle('🔒 Ticket Kapatıldı - BlackWell Family')
+                                .setDescription(`**${channel.name}** ticketı kapatıldı!`)
+                                .addFields(
+                                    { name: '📢 Kanal', value: channel.name, inline: true },
+                                    { name: '👤 Kapatılan', value: interaction.user.tag, inline: true },
+                                    { name: '👤 Ticket Sahibi', value: ownerUser ? ownerUser.user.tag : 'Bilinmiyor', inline: true },
+                                    { name: '⏰ Kapanış', value: `<t:${Math.floor(Date.now() / 1000)}:R>`, inline: true }
+                                )
+                                .setThumbnail(interaction.user.displayAvatarURL())
+                                .setImage('https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExazhneW5tdjlqcWczaXB4ZnRrMmR4eGFwcjB2OHlpc21wZnM2MTRxaCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/MD3VFsgFLey4f6lnyK/giphy.gif')
+                                .setTimestamp();
+
                             await logChannel.send({
-                                content: `📄 **Transcript:** ${channel.name}`,
-                                files: [fileName]
-                            }).catch(() => {});
+                                embeds: [closeEmbed],
+                                files: [{
+                                    attachment: fileName,
+                                    name: `${channel.name}.txt`
+                                }]
+                            });
+                            
+                            console.log(`✅ Kapanış log gönderildi`);
                         }
-                    } catch (e) {}
+                    } catch (error) {
+                        console.error('❌ Kapanış log hatası:', error.message);
+                    }
                 }
 
                 setTimeout(() => channel.delete().catch(() => {}), 5000);
             }
 
+            // İPTAL
             if (interaction.customId === 'cancel_close') {
                 await interaction.update({ content: '✅ İptal edildi.', components: [] });
             }
