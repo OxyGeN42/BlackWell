@@ -355,25 +355,37 @@ async function createTicket(interaction, category) {
             } catch (e) {}
         }, 5000);
 
-        // Log kanalı
-        const logChannel = interaction.guild.channels.cache.get(config.logChannelId);
-        if (logChannel) {
-            const logEmbed = new EmbedBuilder()
-                .setColor(info.color)
-                .setTitle('📬 Yeni Ticket Açıldı - BlackWell Family')
-                .setThumbnail(interaction.user.displayAvatarURL())
-                .addFields(
-                    { name: '👤 Kullanıcı', value: `${interaction.user.tag} (${interaction.user.id})`, inline: true },
-                    { name: '📂 Kategori', value: `${info.emoji} ${info.title}`, inline: true },
-                    { name: '📢 Kanal', value: `${ticketChannel}`, inline: true },
-                    { name: '⏰ Açılış', value: `<t:${Math.floor(Date.now() / 1000)}:R>`, inline: true }
-                )
-                .setImage('https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExazhneW5tdjlqcWczaXB4ZnRrMmR4eGFwcjB2OHlpc21wZnM2MTRxaCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/MD3VFsgFLey4f6lnyK/giphy.gif')
-                .setTimestamp();
+        // LOG KANALI KONTROLÜ - GELİŞTİRİLMİŞ VERSİYON
+console.log(`🔍 Log kanalı ID kontrol: ${config.logChannelId}`);
 
-            await logChannel.send({ embeds: [logEmbed] });
-        }
+const logChannel = interaction.guild.channels.cache.get(config.logChannelId);
 
+if (!logChannel) {
+    console.log(`❌ Log kanalı BULUNAMADI! ID: ${config.logChannelId}`);
+    console.log(`📋 Sunucudaki kanallar: ${interaction.guild.channels.cache.map(c => `${c.name} (${c.id})`).join(', ')}`);
+} else {
+    console.log(`✅ Log kanalı bulundu: ${logChannel.name} (${logChannel.id})`);
+    
+    try {
+        const logEmbed = new EmbedBuilder()
+            .setColor(info.color)
+            .setTitle('📬 Yeni Ticket Açıldı - BlackWell Family')
+            .setDescription(`**${interaction.user.tag}** tarafından yeni ticket açıldı!`)
+            .addFields(
+                { name: '👤 Kullanıcı', value: `${interaction.user.tag} (${interaction.user.id})`, inline: true },
+                { name: '📂 Kategori', value: `${info.emoji} ${info.title}`, inline: true },
+                { name: '📢 Kanal', value: `${ticketChannel}`, inline: true },
+                { name: '⏰ Açılış', value: `<t:${Math.floor(Date.now() / 1000)}:R>`, inline: true }
+            )
+            .setThumbnail(interaction.user.displayAvatarURL())
+            .setTimestamp();
+
+        await logChannel.send({ embeds: [logEmbed] });
+        console.log(`✅ Log başarıyla gönderildi: ${logChannel.name}`);
+    } catch (error) {
+        console.error(`❌ Log gönderilirken hata:`, error);
+    }
+}
     } catch (error) {
         console.error('Ticket açma hatası:', error);
         await interaction.editReply({
