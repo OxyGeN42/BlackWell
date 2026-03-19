@@ -21,9 +21,30 @@ if (!config.token) {
     process.exit(1);
 }
 
-if (!config.logChannelId) {
-    console.error('⚠️ UYARI: logChannelId bulunamadı! Loglar gönderilemeyecek.');
-}
+        // LOG KANALI - BASİT VERSİYON
+        if (config.logChannelId) {
+            try {
+                const logChannel = await client.channels.fetch(config.logChannelId);
+                if (logChannel) {
+                    const logEmbed = new EmbedBuilder()
+                        .setColor(info.color)
+                        .setTitle('📬 Yeni Ticket Açıldı - BlackWell Family')
+                        .addFields(
+                            { name: '👤 Kullanıcı', value: interaction.user.tag, inline: true },
+                            { name: '📂 Kategori', value: info.title, inline: true },
+                            { name: '📢 Kanal', value: ticketChannel.toString(), inline: true }
+                        )
+                        .setTimestamp();
+
+                    await logChannel.send({ embeds: [logEmbed] });
+                    console.log(`✅ Log gönderildi: ${logChannel.name}`);
+                }
+            } catch (error) {
+                console.error('❌ Log hatası:', error.message);
+            }
+        } else {
+            console.log('⚠️ logChannelId tanımlı değil, log gönderilemedi');
+        }
 
 // Ticket geçmişi için klasör
 if (!fs.existsSync('./transcripts')) {
