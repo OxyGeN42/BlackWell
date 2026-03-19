@@ -1,5 +1,9 @@
 const { Client, GatewayIntentBits, Partials, EmbedBuilder, ActionRowBuilder, StringSelectMenuBuilder, ButtonBuilder, ButtonStyle, ChannelType, PermissionsBitField } = require('discord.js');
-const config = require('./config.json');
+const config = {
+    token: process.env.token,
+    supportRoles: process.env.supportRoles ? process.env.supportRoles.split(",") : [],
+    logChanelId: process.env.logChannelId
+};
 const fs = require('fs');
 
 const client = new Client({
